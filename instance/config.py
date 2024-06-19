@@ -1,8 +1,13 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = 'sql:///tembea.db'
+    SQLALCHEMY_DATABASE_URI = "mariadb+mariadbconnector://mugo:Demo123@127.0.0.1:3306/tembea"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
@@ -34,3 +39,24 @@ class Config:
     account_sid = os.environ.get('account_sid')
     auth_token = os.environ.get('auth_token')
     twilio_phone_number = os.environ.get('twilio_phone_number')
+
+class ProductionConfig(Config):
+    DEBUG = False
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    USE_RELOADER = False
+
+
+class TestingConfig(Config):
+    TESTING = True
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL')
+
+
+app_config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig
+}

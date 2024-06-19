@@ -11,7 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 
-from app import app_config
+
+from instance.config import app_config
 
 db = SQLAlchemy()
 jwt = JWTManager()
