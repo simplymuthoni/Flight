@@ -7,7 +7,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from flask_mail import Message
 
 from app import mail
-from helpers.query_helpers import get_tomorrow_flights
+from app.helpers.query_helpers import get_tomorrow_flights
 
 
 def get_booked_flights():

@@ -1,49 +1,36 @@
 from datetime import datetime
-from app import db, login
-from base_model import BaseModel
+from app import db
+from app.base_model import BaseModel
 from werkzeug.security import generate_password_hash, check_password_hash
-import uuid
+from sqlalchemy.orm import scoped_session, sessionmaker
+import scrypt
 
-class User(BaseModel):
-    
-    """This class defines the users table"""
-    __tablename__ = 'users'
-    
-    UserID = db.Column(db.String, primary_key=True, default=lambda:str(uuid.uuid4()))
-    Username = db.Column(db.String(64), index=True, unique=True)
-    Name = db.Column(db.String)
-    password_hash = db.Column(db.String(128))
-    Email = db.Column(db.String(120), index=True, unique=True)
-    Phone_Number =db.Column(db.String)
-    Address = db.Column(db.String)
-    Type = db.Column(db.Text)
-    
-    def __init__(self, email, username, password):
-        
-        """Initialize the user with
-        the user details"""
-        self.email = email
-        self.username = username
-        self.password = generate_password_hash(password).decode()
-        
-
-    def __repr__(self):
-        return f'<User {self.username}>'
+# User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    password_hash = db.Column(db.String(36), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    phone_number = db.Column(db.String(20))
+    address = db.Column(db.String(200), nullable=False)
+    type = db.Column(db.String(50), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
+    
     def to_dict(self):
         return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
+            "id": self.id,
+            "username": self.username,
+            "name": self.name,
+            "email": self.email,
+            "phone_number": self.phone_number,
+            "address": self.address,
+            "type": self.type
         }
 
-@login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
-
+   

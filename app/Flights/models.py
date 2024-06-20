@@ -1,75 +1,64 @@
-import datetime
-import uuid
 from app import db
-from base_model import BaseModel
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 
-class Airport(BaseModel):
+class Airport(db.Model):
     """This class defines the airports table"""
-
-    __tablename__ = 'Airpot'
-   
-
-    AirportID = db.Column(db.String, primary_key=True, default=lambda:str(uuid.uuid4()))
-    AirportCode = db.Column(db.String, nullable=False)
-    AirportName = db.Column(db.String, nullable=False)
+    
+    __tablename__ = 'Airport'
+    
+    AirportID = db.Column(db.Integer, primary_key=True)
+    airport_name = db.Column(db.String, nullable=False)
     city = db.Column(db.String(256), nullable=False)
     country = db.Column(db.String(256), nullable=False)
-    Latitude = db.Column(db.String, nullable=False)
-    Longitude = db.Column(db.String, nullable=False)
-    flights = db.relationship('Flight', backref='airport', lazy=True)
-
-    def __init__(self, AirportName, country, city):
+    
+    def __init__(self, airport_name, country, city):
         """Initialize the airport with the airport details"""
-        self.AirportName = AirportName
+        self.airport_name = airport_name
         self.country = country
         self.city = city
 
-    def serialize(self):
+    def to_dict(self):
         """Return a dictionary"""
         return {
-            'airport_id': self.id,
-            'airport_name': self.AirportName,
+            'airport_id': self.AirportID,
+            'airport_name': self.airport_name,
             'country': self.country,
             'city': self.city
         }
-
-    @staticmethod
-    def get_all():
-        return Airport.query.all()
-
     def __repr__(self):
-        return 'airports: {}'.format(self.name)
+        return f"Airport(airport_id={self.AirportID}, airport_name='{self.airport_name}', country='{self.country}', city='{self.city}')"
 
 
-class Airplane(BaseModel):
+class Airplane(db.Model):
     """This class defines the airplanes table"""
-
-    __tablename__ = 'airplanes'
-
-    id = db.Column(db.Integer, primary_key=True)
-    reg_number = db.Column(db.String, nullable=False)
+    __tablename__ = 'Airplane'
+    
+    AirplaneID = db.Column(db.Integer, primary_key=True)
+    registration_number = db.Column(db.String, nullable=False)
     total_seats = db.Column(db.Integer, nullable=False)
     economy_seats = db.Column(db.Integer, nullable=False)
     business_seats = db.Column(db.Integer, nullable=False)
-    flights = db.relationship('Flight', backref='airplane', lazy=True)
+    first_class_seats = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, reg_number, economy_seats, business_seats,
-                 first_class_seats):
+    def __init__(self, registration_number,total_seats, economy_seats, business_seats,first_class_seats):
         """Initialize the airplane details"""
-        self.reg_number = reg_number
-        self.total_seats = economy_seats + business_seats
+        self.registration_number = registration_number
+        self.total_seats = total_seats
         self.economy_seats = economy_seats
         self.business_seats = business_seats
         self.first_class_seats = first_class_seats
 
-    def serialize(self):
+    def to_dict(self):
         """Return a dictionary"""
         return {
-            'airplane_id': self.id,
-            'reg_number': self.reg_number,
+            'airplane_id': self.AirplaneID,
+            'registration_number': self.registration_number,
             'business_seats': self.business_seats,
             'economy_seats': self.economy_seats,
+            'first_class_seats': self.first_class_seats,
             'total_seats': self.total_seats
         }
 
@@ -78,52 +67,54 @@ class Airplane(BaseModel):
         return Airplane.query.all()
 
     def __repr__(self):
-        return 'Airplane: {}'.format(self.reg_number)
+        return 'Airplane: {}'.format(self.registration_number)
 
 
-class Flight(BaseModel):
+class Flight(db.Model):
     """This class defines the flight schedules table"""
-
-    __tablename__ = 'Flights'
-
-    FlightsID = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'Flight'
+    
+    FlightID = db.Column(db.Integer, primary_key=True)
     Flight_Number = db.Column(db.Integer)
     Departure_Airport = db.Column(db.String, nullable=False)
     Arrival_Airport = db.Column(db.String, nullable=False)
     Departure_Date_time =db.Column(db.DateTime)
     Arrival_Date_time = db.Column(db.DateTime)
-    Capacity=db.Colum(db.Integer)
-    Price =db.Column(db.Currency)
-    bookings = db.relationship('Booking', backref='flight', lazy=True)
+    Capacity= db.Column(db.Integer)
+    Price =db.Column(db.Float)
+    AirPlaneID = db.Column(db.Integer, db.ForeignKey('Airplane.AirplaneID'), nullable=False)
 
-    def __init__(self, Departure_Date_Time, Departure_Airport, Arrival_Date_Time,
-                 Arrival_Airport, FlightsID):
+    def __init__(self, Departure_Date_Time, Departure_Airport, Arrival_Date_Time,Arrival_Airport, Flight_Number, Capacity, Price, AirplaneID):
         """Initialize the flight details"""
-        
         
         self.Departure_Date_time = Departure_Date_Time
         self.Departure_Airport = Departure_Airport
         self.Arrival_Date_time= Arrival_Date_Time
         self.Arrival_Airport = Arrival_Airport
-        self.FlightsID = FlightsID
+        self.Flight_Number = Flight_Number
+        self.Capacity= Capacity
+        self.Price = Price
+        self.AirPlaneID = AirplaneID
 
-    def get_arrival_airport(self):
-        return Airport.query.filter_by(id=self.Arrival_Airport).first()
-
-    def serialize(self):
+    def to_dict(self):
         """Return a dictionary"""
-        self.arrival_airport = self.get_arrival_airport()
         return {
-            'FlightID': self.FlightsID,
+            'FlightID': self.FlightID,
             'Departure_Date_Time': self.Departure_Date_time,
             'Departure_Airport': self.Departure_Airport,
             'Arrival_Date_Time': self.Arrival_Date_time,
             'Arrival_Airport': self.Arrival_Airport,
+            'Flight_Number': self.Flight_Number,
+            'Capacity': self.Capacity,
+            'Price': self.Price,
+            'AirplaneID': self.AirPlaneID
         }
+        
+
 
     @staticmethod
     def get_all():
         return Flight.query.all()
 
     def __repr__(self):
-        return 'Flight: {}'.format(self.id)
+        return 'Flight: {}'.format(self.FlightsID)

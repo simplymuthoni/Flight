@@ -5,8 +5,8 @@ from flask import jsonify
 from flask_jwt_extended import create_access_token
 
 from app import ROOT_DIR, db
-from auth.models import User
-from Flights.models import Airport, Airplane, Flight
+from app.auth.models import User
+from app.Flights.models import Airport, Airplane, Flight
 
 
 def generate_token(message, user, expires=datetime.timedelta(hours=1)):
@@ -27,8 +27,9 @@ def search_email(email):
         return User.query.filter_by(email=email).first()
 
 
-def save_user(email, name, password):
-    user = User(email, name, password)
+def save_user(email, password, username):
+    user = User(email=email, username=username, password=password)
+    print("Debugging:", user)
     user.save()
 
 
