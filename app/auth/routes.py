@@ -25,16 +25,14 @@ def add_user():
     email = data.get('email')
     phone_number = data.get('phone_number')
     address = data.get('address')
-   
     
-
     if not all([username, name, password, email, phone_number, address]):
         return jsonify({"error": "Missing required fields"}), 400
 
     # Check if the user already exists
-    if User.query.filter_by(username=username).first() is not None:
+    if User.query.filter_by(username=username) is not None:
         return jsonify({"error": "Username already taken"}), 400
-    if User.query.filter_by(email=email).first() is not None:
+    if User.query.filter_by(email=email) is not None:
         return jsonify({"error": "Email already registered"}), 400
 
     user = User(
@@ -43,6 +41,7 @@ def add_user():
         email=email,
         phone_number=phone_number,
         address=address,
+        password= password
     )
     user.set_password(password)
     db.session.add(user)
@@ -63,13 +62,12 @@ def login():
     if not email or not password:
         return jsonify({"error": "Missing required fields"}), 400
 
-    user = User.query.filter(User.email == email)
+    user = User.query.filter_by(email=email).first()
 
-    if user is None or not user.check_password(password):
-        return jsonify({"error": "Invalid email or password"}), 400
+    # if not user or not user.check_password(password):
+    #     return jsonify({"error": "Invalid email or password"}), 400
 
     return jsonify({"message": "Login successful", "user": user.to_dict()}), 200
-
 @app.route('/users', methods=['GET'])
 def get_users():
     # users = User.query.all()
@@ -96,15 +94,14 @@ def update_user(user_id):
     email = data.get('email')
     phone_number = data.get('phone_number')
     address = data.get('address')
-    
 
     if username:
-        if User.query.filter_by(username=username).first() and User.query.filter_by(username=username).first().id != user_id:
+        if User.query.filter_by(username=username) and User.query.filter_by(username=username).id != user_id:
             return jsonify({"error": "Username already taken"}), 400
         user.username = username
 
     if email:
-        if User.query.filter_by(email=email).first() and User.query.filter_by(email=email).first().id != user_id:
+        if User.query.filter_by(email=email) and User.query.filter_by(email=email).id != user_id:
             return jsonify({"error": "Email already registered"}), 400
         user.email = email
 
@@ -119,7 +116,6 @@ def update_user(user_id):
 
     if address:
         user.address = address
-
 
     db.session.commit()
     return jsonify({"message": "User updated successfully"}), 200
@@ -142,4 +138,3 @@ auth.add_url_rule('/delete', view_func=delete_user, methods=['delete'])
 
 if __name__ == '__main__':
     app.run(debug=True)
-

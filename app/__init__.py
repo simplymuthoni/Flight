@@ -57,11 +57,13 @@ def create_app(config_name='development'):
     
     from app.auth.routes import auth 
     app.register_blueprint(auth)
-    
+
+    from app.admin.routes import admin_blueprint
     from app.Flights.routes.flights import flights_blueprint
     from app.Flights.routes.airplane import airplane_blueprint
     from app.Flights.routes.airport import airport_blueprint
-    
+
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
     app.register_blueprint(flights_blueprint, url_prefix='/api/flights')
     app.register_blueprint(airplane_blueprint, url_prefix='/api/airplane')
     app.register_blueprint(airport_blueprint, url_prefix='/api/airport')
