@@ -1,9 +1,11 @@
-from flask import request, jsonify, Blueprint, Flask
+from flask import Flask, request, jsonify, Blueprint
+from flasgger import Swagger
 from app.auth.models import User
 from app.schemas import UserSchema
 from app import db
 
 app = Flask(__name__)
+swagger = Swagger(app)
 
 auth = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -11,9 +13,43 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 # Route to register a user
-
 @app.route('/register', methods=['POST'])
 def add_user():
+    """
+    Register a new user
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: User
+          required:
+            - username
+            - name
+            - password
+            - email
+            - phone_number
+            - address
+          properties:
+            username:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+            email:
+              type: string
+            phone_number:
+              type: string
+            address:
+              type: string
+    responses:
+      201:
+        description: User registered successfully
+      400:
+        description: Invalid input or missing required fields
+    """
     data = request.get_json()
 
     if not data:
@@ -25,14 +61,13 @@ def add_user():
     email = data.get('email')
     phone_number = data.get('phone_number')
     address = data.get('address')
-    
+
     if not all([username, name, password, email, phone_number, address]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    # Check if the user already exists
-    if User.query.filter_by(username=username) is not None:
+    if User.query.filter_by(username=username).first() is not None:
         return jsonify({"error": "Username already taken"}), 400
-    if User.query.filter_by(email=email) is not None:
+    if User.query.filter_by(email=email).first() is not None:
         return jsonify({"error": "Email already registered"}), 400
 
     user = User(
@@ -41,7 +76,7 @@ def add_user():
         email=email,
         phone_number=phone_number,
         address=address,
-        password= password
+        password=password
     )
     user.set_password(password)
     db.session.add(user)
@@ -51,8 +86,33 @@ def add_user():
 
 @app.route('/login', methods=['POST'])
 def login():
+    """
+    User login
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: Login
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+    responses:
+      200:
+        description: Login successful
+      400:
+        description: Invalid input or missing required fields
+      401:
+        description: Unauthorized
+    """
     data = request.get_json()
-    
+
     if not data:
         return jsonify({"error": "Invalid input"}), 400
 
@@ -68,17 +128,61 @@ def login():
     #     return jsonify({"error": "Invalid email or password"}), 400
 
     return jsonify({"message": "Login successful", "user": user.to_dict()}), 200
+
 @app.route('/users', methods=['GET'])
 def get_users():
-    # users = User.query.all()
-    # # result = users_schema.dump(users)
-    # return jsonify(users.to_dict()), 200
+    """
+    Get all users
+    ---
+    responses:
+      200:
+        description: A list of users
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/User'
+    """
     users = User.query.all()
     users_dict_list = [user.to_dict() for user in users]
     return jsonify(users_dict_list), 200
 
 @app.route('/update/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
+    """
+    Update user
+    ---
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+        description: The user ID
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: User
+          properties:
+            username:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+            email:
+              type: string
+            phone_number:
+              type: string
+            address:
+              type: string
+    responses:
+      200:
+        description: User updated successfully
+      400:
+        description: Invalid input or missing required fields
+      404:
+        description: User not found
+    """
     data = request.get_json()
 
     if not data:
@@ -96,12 +200,12 @@ def update_user(user_id):
     address = data.get('address')
 
     if username:
-        if User.query.filter_by(username=username) and User.query.filter_by(username=username).id != user_id:
+        if User.query.filter_by(username=username).first() and User.query.filter_by(username=username).first().id != user_id:
             return jsonify({"error": "Username already taken"}), 400
         user.username = username
 
     if email:
-        if User.query.filter_by(email=email) and User.query.filter_by(email=email).id != user_id:
+        if User.query.filter_by(email=email).first() and User.query.filter_by(email=email).first().id != user_id:
             return jsonify({"error": "Email already registered"}), 400
         user.email = email
 
@@ -120,8 +224,23 @@ def update_user(user_id):
     db.session.commit()
     return jsonify({"message": "User updated successfully"}), 200
 
-@app.route('/delete/<int:id>', methods=['DELETE'])
+@app.route('/delete/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
+    """
+    Delete user
+    ---
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+        description: The user ID
+    responses:
+      200:
+        description: User deleted successfully
+      404:
+        description: User not found
+    """
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404

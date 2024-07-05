@@ -21,7 +21,8 @@ class User(db.Model):
     def __init__(self, username, name, password, email, phone_number=None, address=None):
         self.username = username
         self.name = name
-        self.set_password(password)
+        # self.set_password(password)
+        self.password =  password
         self.email = email
         self.phone_number = phone_number
         self.address = address
@@ -33,5 +34,6 @@ class User(db.Model):
             "name": self.name,
             "email": self.email,
             "phone_number": self.phone_number,
-            "address": self.address
+            "address": self.address,
+            "password": self.password
         }
