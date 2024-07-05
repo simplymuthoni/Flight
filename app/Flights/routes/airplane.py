@@ -2,16 +2,20 @@ from flask import Blueprint, request, jsonify, Flask
 from app.Flights.models import Airplane
 from app import db
 from app.schemas import AirplaneSchema
+<<<<<<< HEAD
 from flasgger import Swagger
 
 app = Flask(__name__)
 swagger = Swagger(app)
+=======
+>>>>>>> upstream/main
 
 airplane_schema =AirplaneSchema()
 airplanes_schema =AirplaneSchema(many=True)
 
 airplane_blueprint = Blueprint('airplane', __name__)
 
+<<<<<<< HEAD
 @airplane_blueprint.route('/create', methods=['POST'])
 def create_airplane():
     """
@@ -47,18 +51,33 @@ def create_airplane():
         description: Invalid input or missing required fields
     """
     data = request.get_json()
+=======
+#Airplane Routes
+@airplane_blueprint.route('/create', methods=['POST']) 
+def create_airplane():
+    data = request.get_json()
+   
+>>>>>>> upstream/main
     registration_number = data.get('registration_number')
     total_seats = data.get('total_seats')
     economy_seats = data.get('economy_seats')
     business_seats = data.get('business_seats')
     first_class_seats = data.get('first_class_seats')
+<<<<<<< HEAD
     if not registration_number or not total_seats or not economy_seats or not business_seats or not first_class_seats:
         return jsonify({"error": "missing required fields"}), 400
+=======
+    
+    if not registration_number or not total_seats or not economy_seats or not business_seats or not first_class_seats:
+        return jsonify({"error": "missing required fields"}), 400
+    
+>>>>>>> upstream/main
     airplane = Airplane(
         registration_number=registration_number,
         total_seats=total_seats,
         economy_seats=economy_seats,
         business_seats=business_seats,
+<<<<<<< HEAD
         first_class_seats=first_class_seats
     )
     db.session.add(airplane)
@@ -120,12 +139,39 @@ def update_airplane(airplane_id):
     airplane = Airplane.query.get(airplane_id)
     if not airplane:
         return jsonify({'message': 'Airplane not found'}), 404
+=======
+        first_class_seats=first_class_seats  
+    )
+    db.session.add(airplane)
+    db.session.commit()
+    print("THE AIRPLANE INSTANCE IS ",airplane)
+    message = "Success"
+    
+    return message
+    
+    # result = airplane_schema.dump(airplane)
+    # return jsonify(result), 201
+    
+@airplane_blueprint.route('/airplanes', methods=['GET'])
+def get_airplanes():
+    airplanes = Airplane.query.all()
+    airplanes_dict_list =[Airplane.to_dict() for Airplane in airplanes]
+    return jsonify(airplanes_dict_list),200
+    
+@airplane_blueprint.route('/update/<int:id>', methods=['PATCH'])
+def update_airplane(airplane_id):
+    airplane = Airplane.query.get(airplane_id)
+    if not airplane:
+        return jsonify({'message': 'Airplane not found'}), 404
+
+>>>>>>> upstream/main
     data = request.get_json()
     airplane.registration_number = data.get('registration_number', airplane.registration_number)
     airplane.total_seats = data.get('total_seats', airplane.total_seats)
     airplane.economy_seats = data.get('economy_seats', airplane.economy_seats)
     airplane.business_seats = data.get('business_seats', airplane.business_seats)
     airplane.first_class_seats = data.get('first_class_seats', airplane.first_class_seats)
+<<<<<<< HEAD
     db.session.commit()
     return jsonify({'message': 'Airplane updated successfully', 'airplane': airplane.to_dict()}), 200
 
@@ -195,3 +241,25 @@ airplane_blueprint.add_url_rule('/airplane/<int:airplane_id>/seats', view_func=g
 
 if __name__ == '__main__':
     app.run(debug=True)
+=======
+
+    db.session.commit()
+
+    return jsonify({'message': 'Airplane updated successfully', 'airplane': airplane.serialize()}), 200
+
+@airplane_blueprint.route('/delete/<int:id>', methods=['DELETE'])
+def delete_airplane(airplane_id):
+    airplane = Airplane.query.get(airplane_id)
+    if not airplane:
+        return jsonify({'message': 'Airplane not found'}), 404
+
+    db.session.delete(airplane)
+    db.session.commit()
+
+    return jsonify({'message': 'Airplane deleted successfully'}), 200
+
+airplane_blueprint.add_url_rule('/airplanes', view_func=get_airplanes, methods=['GET'])   
+airplane_blueprint.add_url_rule('/create', view_func=create_airplane, methods=['POST'])
+airplane_blueprint.add_url_rule('/update', view_func=update_airplane, methods=['PATCH'])
+airplane_blueprint.add_url_rule('/delete', view_func=delete_airplane, methods=['DELETE'])
+>>>>>>> upstream/main

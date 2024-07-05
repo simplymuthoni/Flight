@@ -43,6 +43,11 @@ class AdminSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
     password= fields.Str(required=True)
+<<<<<<< HEAD
+=======
+    is_admin = fields.Boolean(required=True)
+    confirmed = fields.Boolean(required=True)
+>>>>>>> upstream/main
     
 
 user_schema = UserSchema()
