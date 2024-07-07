@@ -50,7 +50,6 @@ class Airplane(db.Model):
         self.economy_seats = economy_seats
         self.business_seats = business_seats
         self.first_class_seats = first_class_seats
-<<<<<<< HEAD
     
     def generate_seat_arrangement(self):
         seats = []
@@ -70,8 +69,6 @@ class Airplane(db.Model):
                 seats.append(seat)
                 seat_number += 1
         return seats
-=======
->>>>>>> upstream/main
 
     def to_dict(self):
         """Return a dictionary"""

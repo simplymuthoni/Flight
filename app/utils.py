@@ -46,42 +46,6 @@ def get_flight(flight_id):
         return jsonify({"error": "Flight not found"}), 404
     return flight
 
-def get_bookings(flight_id):
-    """
-    Get bookings for a flight
-    """
-    bookings = Booking.query.filter_by(flight_id=flight_id).all()
-    return bookings
-
-def create_booking(data):
-    """
-    Create a new booking
-    """
-    flight_id = data['flight_id']
-    num_seats = data['num_seats']
-    customer_name = data['customer_name']
-    customer_email = data['customer_email']
-    flight = get_flight(flight_id)
-    if flight is None:
-        return jsonify({"error": "Flight not found"}), 404
-    if num_seats > flight.seats:
-        return jsonify({"error": "Not enough seats available"}), 400
-    booking = Booking(flight_id=flight_id, num_seats=num_seats, customer_name=customer_name, customer_email=customer_email)
-    db.session.add(booking)
-    db.session.commit()
-    return jsonify({"message": "Booking created successfully"}), 201
-
-def cancel_booking(booking_id):
-    """
-    Cancel a booking
-    """
-    booking = Booking.query.get(booking_id)
-    if booking is None:
-        return jsonify({"error": "Booking not found"}), 404
-    db.session.delete(booking)
-    db.session.commit()
-    return jsonify({"message": "Booking cancelled successfully"}), 200
-
 def generate_password(password):
     return generate_password_hash(password, method=current_app.config['PASSWORD_HASH_METHOD'])
 
