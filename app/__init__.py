@@ -15,22 +15,22 @@ from app import config
 from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow
 from flasgger import Swagger
+from flask_bcrypt import Bcrypt
+from flask_session import Session
 # from flask_script import Manager
 
 load_dotenv()
 
 jwt = JWTManager()
 mail = Mail()
-db = SQLAlchemy()  
+db = SQLAlchemy() 
+bcrypt = Bcrypt()
+sess = Session()
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-<<<<<<< HEAD
-def create_app(config_name='development'):
-=======
 def create_app(config_name):
->>>>>>> upstream/main
     """Function wraps the creation of a new Flask object, and returns it after it's
         loaded up with configuration settings
     """
@@ -58,10 +58,11 @@ def create_app(config_name):
     ma = Marshmallow(app)
     swagger = Swagger(app)
     jwt = JWTManager(app)
+    bcrypt.init_app(app)
+    sess.init_app(app)
     
     from app.auth.routes import auth 
     app.register_blueprint(auth)
-<<<<<<< HEAD
 
     from app.admin.routes import admin_blueprint
     from app.Flights.routes.flights import flights_blueprint
@@ -73,17 +74,6 @@ def create_app(config_name):
     app.register_blueprint(airplane_blueprint, url_prefix='/api/airplane')
     app.register_blueprint(airport_blueprint, url_prefix='/api/airport')
     
-=======
-    
-    from app.Flights.routes.flights import flights_blueprint
-    from app.Flights.routes.airplane import airplane_blueprint
-    from app.Flights.routes.airport import airport_blueprint
-    
-    app.register_blueprint(flights_blueprint, url_prefix='/api/flights')
-    app.register_blueprint(airplane_blueprint, url_prefix='/api/airplane')
-    app.register_blueprint(airport_blueprint, url_prefix='/api/airport')
-
->>>>>>> upstream/main
     from app.helpers.send_email import background_scheduler
 
     background_scheduler()

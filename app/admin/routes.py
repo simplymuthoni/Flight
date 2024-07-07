@@ -1,29 +1,15 @@
-<<<<<<< HEAD
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from app.schemas import AdminSchema
 from app import db
 from app.admin.models import Admin
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 from flasgger import swag_from
-=======
-from flask import Flask, Blueprint
-from flask_script import Manager
-from werkzeug.security import generate_password_hash
-from app.schemas import AdminSchema
-from app import db
-from app.admin.models import Admin
-import os
-
-app = Flask(__name__)
-
-admin =  Blueprint('admin', __name__, url_prefix='/api')
->>>>>>> upstream/main
+from flask_session import Session
 
 admin_schema = AdminSchema()
 admins_schema = AdminSchema(many=True)
 
-<<<<<<< HEAD
 admin_blueprint = Blueprint('admin', __name__)
 
 @admin_blueprint.route('/register', methods=['POST'])
@@ -163,29 +149,21 @@ def login_admin():
 
     admin = Admin.query.filter_by(email=email).first()
 
-    if admin is None or not admin.check_password(password):
+    if admin is None or not check_password_hash(admin.password, password):
         return jsonify({"error": "Invalid email or password"}), 400
 
+    session['admin_id'] = admin.id
+    session['admin_email'] = admin.email
     return jsonify({"message": "Login successful", "admin": admin.to_dict()}), 200
-=======
-manager = Manager(app)
 
-@manager.command
-def create_admin():
-    """Creates the admin user."""
-    try:
-        db.session.add(Admin(
-            email=os.getenv('ADMIN_EMAIL'),
-            name=os.getenv('ADMIN_NAME'),
-            password=generate_password_hash(os.getenv('ADMIN_PASSWORD')),
-            is_admin=True,
-            confirmed=True)
-        )
-        db.session.commit()
-        print('Admin user created successfully.')
-    except Exception as e:
-        print('Failed to create admin user: ' + str(e))
+@admin_blueprint.route('/logout', methods=['POST'])
+def logout_admin():
+    session.pop('admin_id', None)
+    session.pop('admin_email', None)
+    return jsonify({"message": "Logged out successfully"}), 200
 
-if __name__ == '__main__':
-    manager.run()
->>>>>>> upstream/main
+@admin_blueprint.route('/session', methods=['GET'])
+def get_session():
+    if 'admin_id' in session:
+        return jsonify({"admin_id": session['admin_id'], "admin_email": session['admin_email']}), 200
+    return jsonify({"error": "No active session"}), 401

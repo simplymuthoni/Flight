@@ -1,25 +1,15 @@
-<<<<<<< HEAD
 from flask import Blueprint, request, jsonify
-=======
-from flask import Blueprint, request, jsonify, Flask
->>>>>>> upstream/main
 from app.Flights.models import Flight, Airplane
 from app import db
 from app.schemas import FlightSchema
 from datetime import datetime
-<<<<<<< HEAD
 from flasgger import Swagger, swag_from
 
-=======
-
-flight_schema = FlightSchema()
->>>>>>> upstream/main
 flights_schema = FlightSchema(many=True)
 
 flights_blueprint = Blueprint('flights', __name__)
 
 @flights_blueprint.route('/flights', methods=['GET'])
-<<<<<<< HEAD
 @swag_from({
     'responses': {
         '200': {
@@ -67,14 +57,6 @@ def get_flights():
         '404': {'description': 'Airplane not found'}
     },
 })
-=======
-def get_flights():
-    flights = Flight.query.all()
-    flights_dict_list = [Flight.to_dict() for Flight in flights]
-    return jsonify(flights_dict_list), 200
-
-@flights_blueprint.route('/create', methods=['POST'])
->>>>>>> upstream/main
 def create_flight():
     data = request.get_json()
 
@@ -87,16 +69,11 @@ def create_flight():
     capacity = data.get('capacity')
     price = data.get('price')
     
-<<<<<<< HEAD
     try:
         departure_date_time = datetime.strptime(departure_date, '%Y-%m-%dT%H:%M:%S')
         arrival_date_time = datetime.strptime(arrival_date, '%Y-%m-%dT%H:%M:%S')
     except ValueError:
         return jsonify({"error": "Incorrect datetime format. Use ISO 8601 format: YYYY-MM-DDTHH:MM:SS"}), 400
-=======
-    departure_date_time=datetime.strptime(departure_date, '%Y-%m-%dT%H:%M:%S')
-    arrival_date_time=datetime.strptime(arrival_date, '%Y-%m-%dT%H:%M:%S')
->>>>>>> upstream/main
 
     # Check if all required fields are provided
     if not all([flight_number, departure_airport, arrival_airport, departure_date_time, arrival_date_time, airplane_id, capacity, price]):
@@ -113,7 +90,6 @@ def create_flight():
 
     # Create the flight object
     flight = Flight(
-<<<<<<< HEAD
         flight_number=flight_number,
         departure_airport=departure_airport,
         arrival_airport=arrival_airport,
@@ -122,16 +98,6 @@ def create_flight():
         airplane_id=airplane_id,
         capacity=capacity,
         price=price
-=======
-        Flight_Number=flight_number,
-        Departure_Airport=departure_airport,
-        Arrival_Airport=arrival_airport,
-        Departure_Date_Time=departure_date_time,
-        Arrival_Date_Time=arrival_date_time,
-        AirplaneID=airplane_id,
-        Capacity=capacity,
-        Price=price
->>>>>>> upstream/main
     )
 
     try:
@@ -141,7 +107,6 @@ def create_flight():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-<<<<<<< HEAD
 
 @flights_blueprint.route('/update/<int:flight_id>', methods=['PATCH'])
 @swag_from({
@@ -178,17 +143,12 @@ def create_flight():
         '404': {'description': 'Flight not found'}
     },
 })
-=======
-    
-@flights_blueprint.route('/update/<int:flight_id>', methods=['PATCH'])
->>>>>>> upstream/main
 def update_flight(flight_id):
     flight = Flight.query.get(flight_id)
     if not flight:
         return jsonify({'message': 'Flight not found'}), 404
 
     data = request.get_json()
-<<<<<<< HEAD
     try:
         departure_date_time = datetime.strptime(data.get('departure_date_time'), '%Y-%m-%dT%H:%M:%S') if data.get('departure_date_time') else flight.departure_date_time
         arrival_date_time = datetime.strptime(data.get('arrival_date_time'), '%Y-%m-%dT%H:%M:%S') if data.get('arrival_date_time') else flight.arrival_date_time
@@ -224,22 +184,6 @@ def update_flight(flight_id):
         '404': {'description': 'Flight not found'}
     },
 })
-=======
-    flight.Departure_Date_time = data.get('Departure_Date_time', flight.Departure_Date_time)
-    flight.Departure_Airport = data.get('Departure_Airport', flight.Departure_Airport)
-    flight.Arrival_Date_time = data.get('Arrival_Date_time', flight.Arrival_Date_time)
-    flight.Arrival_Airport = data.get('Arrival_Airport', flight.Arrival_Airport)
-    flight.Flight_Number = data.get('Flight_Number', flight.Flight_Number)
-    flight.Capacity = data.get('Capacity', flight.Capacity)
-    flight.Price = data.get('Price', flight.Price)
-    flight.AirPlaneID = data.get('AirPlaneID', flight.AirPlaneID)
-
-    db.session.commit()
-
-    return jsonify({'message': 'Flight updated successfully', 'flight': flight.serialize()}), 200
-    
-@flights_blueprint.route('/delete/<int:flight_id>', methods=['DELETE'])
->>>>>>> upstream/main
 def delete_flight(flight_id):
     flight = Flight.query.get(flight_id)
     if not flight:
@@ -249,7 +193,6 @@ def delete_flight(flight_id):
     db.session.commit()
 
     return jsonify({'message': 'Flight deleted successfully'}), 200
-<<<<<<< HEAD
 
 # Register Blueprints
 flights_blueprint.add_url_rule('/flights', view_func=get_flights, methods=['GET'])
@@ -257,10 +200,3 @@ flights_blueprint.add_url_rule('/create', view_func=create_flight, methods=['POS
 flights_blueprint.add_url_rule('/update/<int:flight_id>', view_func=update_flight, methods=['PATCH'])
 flights_blueprint.add_url_rule('/delete/<int:flight_id>', view_func=delete_flight, methods=['DELETE'])
 
-=======
-    
-flights_blueprint.add_url_rule('/flights', view_func=get_flights, methods=['GET'])
-flights_blueprint.add_url_rule('/create', view_func=create_flight,methods=['POST'])
-flights_blueprint.add_url_rule('/update', view_func=update_flight, methods=['PATCH'])
-flights_blueprint.add_url_rule('/delete', view_func=delete_flight, methods=['DELETE'])
->>>>>>> upstream/main
