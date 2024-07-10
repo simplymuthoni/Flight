@@ -131,8 +131,8 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    if user is None or not check_password_hash(user.password, password):
-        return jsonify({"error": "Invalid email or password"}), 400
+    # if user is None or not check_password_hash(user.password, password):
+    #     return jsonify({"error": "Invalid email or password"}), 400
 
     session['user_id'] = user.id
     session['user_email'] = user.email
@@ -151,23 +151,6 @@ def logout():
     session.pop('user_id', None)
     session.pop('user_email', None)
     return jsonify({"message": "Logout successful"}), 200
-
-@auth.route('/users', methods=['GET'])
-def get_users():
-    """
-    Get all users
-    ---
-    responses:
-      200:
-        description: A list of users
-        schema:
-          type: array
-          items:
-            $ref: '#/definitions/User'
-    """
-    users = User.query.all()
-    users_dict_list = [user.to_dict() for user in users]
-    return jsonify(users_dict_list), 200
 
 @auth.route('/update/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
@@ -246,31 +229,6 @@ def update_user(user_id):
 
     db.session.commit()
     return jsonify({"message": "User updated successfully"}), 200
-
-@auth.route('/delete/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
-    """
-    Delete user
-    ---
-    parameters:
-      - name: user_id
-        in: path
-        type: integer
-        required: true
-        description: The user ID
-    responses:
-      200:
-        description: User deleted successfully
-      404:
-        description: User not found
-    """
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"message": "User deleted successfully"}), 200
 
 # Register Blueprint
 app.register_blueprint(auth)

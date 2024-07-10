@@ -49,6 +49,7 @@ def create_airport():
     db.session.commit()
     return jsonify({"message": "Airport created successfully"}), 201
 
+
 @airport_blueprint.route('/airports', methods=['GET'])
 @swag_from({
     'responses': {
@@ -67,6 +68,54 @@ def get_airports():
     airports = Airport.query.all()
     airports_dict_list = [airport.to_dict() for airport in airports]
     return jsonify(airports_dict_list), 200
+
+@airport_blueprint.route('/update/<int:airport_id>', methods=['PATCH'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'airport_id',
+            'in': 'path',
+            'type': 'integer',
+            'required': True,
+            'description': 'The airport ID',
+        },
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'id': 'Airport',
+                'properties': {
+                    'airport_name': {'type': 'string'},
+                    'city': {'type': 'string'},
+                    'country': {'type': 'string'},
+                },
+            },
+        },
+    ],
+    'responses': {
+        '200': {'description': 'Airport updated successfully'},
+        '400': {'description': 'Invalid input or missing required fields'},
+        '404': {'description': 'Airport not found'},
+    },
+})
+def update_airport(airport_id):
+    data = request.get_json()
+    airport = Airport.query.get(airport_id)
+    
+    if not airport:
+        return jsonify({'message': 'Airport not found'}), 404
+
+    airport.airport_name = data.get('airport_name', airport.airport_name)
+    airport.city = data.get('city', airport.city)
+    airport.country = data.get('country', airport.country)
+
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Airport updated successfully', 'airport': airport.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @airport_blueprint.route('/delete/<int:airport_id>', methods=['DELETE'])
 @swag_from({
@@ -100,7 +149,7 @@ def delete_airport(airport_id):
 # Register Blueprints
 airport_blueprint.add_url_rule('/airports', view_func=get_airports, methods=['GET'])
 airport_blueprint.add_url_rule('/create', view_func=create_airport, methods=['POST'])
-# airport_blueprint.add_url_rule('/update', view_func=update_airport, methods=['PATCH'])
+airport_blueprint.add_url_rule('/update/<int:airport_id>', view_func=update_airport, methods=['PATCH'])
 airport_blueprint.add_url_rule('/delete', view_func=delete_airport, methods=['DELETE'])
 if __name__ == '__main__':
     app.run(debug=True)

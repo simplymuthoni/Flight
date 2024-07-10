@@ -33,8 +33,7 @@ def create_tables():
                             Password VARCHAR(255) NOT NULL,
                             Email VARCHAR(255) NOT NULL,
                             Phone_Number VARCHAR(10) NOT NULL,
-                            Address VARCHAR(255) NOT NULL,
-                            Type VARCHAR(255) NOT NULL);''')
+                            Address VARCHAR(255) NOT NULL);''')
         
         conn.execute('''CREATE TABLE IF NOT EXISTS Airport(
                             AirportID CHAR(36) PRIMARY KEY,

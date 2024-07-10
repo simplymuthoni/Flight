@@ -45,7 +45,7 @@ def create_app(config_name):
         raise KeyError(f"Configuration '{config_name}' is not a valid configuration name.")
     
     app.config.from_object(app_config[config_name])
-    
+    app.config['SECRET_KEY'] = 'flyhigh'
     if __name__ == "__main__":
         config_name = os.getenv('FLASK_CONFIG', 'development')
     CORS(app)    
@@ -65,15 +65,20 @@ def create_app(config_name):
     app.register_blueprint(auth)
 
     from app.admin.routes import admin_blueprint
+    from app.admin.users.routes import users_blueprint
+    from app.admin.flights.routes import wing_blueprint
     from app.Flights.routes.flights import flights_blueprint
     from app.Flights.routes.airplane import airplane_blueprint
     from app.Flights.routes.airport import airport_blueprint
-
-    app.register_blueprint(admin_blueprint, url_prefix='/admin')
-    app.register_blueprint(flights_blueprint, url_prefix='/api/flights')
-    app.register_blueprint(airplane_blueprint, url_prefix='/api/airplane')
-    app.register_blueprint(airport_blueprint, url_prefix='/api/airport')
     
+
+    app.register_blueprint(admin_blueprint, url_prefix='/api/admin')
+    app.register_blueprint(users_blueprint, url_prefix='/api/admin/user')
+    app.register_blueprint(wing_blueprint, url_prefix='/api/admin/wing')
+    app.register_blueprint(airplane_blueprint, url_prefix='/api/admin/airplane')
+    app.register_blueprint(airport_blueprint, url_prefix='/api/admin/airport')
+    app.register_blueprint(flights_blueprint, url_prefix='/api/flights')
+
     from app.helpers.send_email import background_scheduler
 
     background_scheduler()
