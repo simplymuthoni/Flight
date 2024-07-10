@@ -128,8 +128,6 @@ class Flight(db.Model):
             'Price': self.Price,
             'AirplaneID': self.AirPlaneID
         }
-        
-
 
     @staticmethod
     def get_all():

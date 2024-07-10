@@ -162,10 +162,10 @@ def get_seat_arrangement(airplane_id):
     seats = airplane.generate_seat_arrangement()
     return jsonify(seats), 200
 
-@airplane_blueprint.route('/delete/<int:id>', methods=['DELETE'])
+@airplane_blueprint.route('/delete/<int:airplane_id>', methods=['DELETE'])
 def delete_airplane(airplane_id):
     """
-    Delete airplane
+    Delete an airplane
     ---
     parameters:
       - name: airplane_id
@@ -178,19 +178,26 @@ def delete_airplane(airplane_id):
         description: Airplane deleted successfully
       404:
         description: Airplane not found
+      500:
+        description: Internal server error
     """
     airplane = Airplane.query.get(airplane_id)
     if not airplane:
         return jsonify({'message': 'Airplane not found'}), 404
-    db.session.delete(airplane)
-    db.session.commit()
-    return jsonify({'message': 'Airplane deleted successfully'}), 200
+    try:
+        db.session.delete(airplane)
+        db.session.commit()
+        return jsonify({'message': 'Airplane deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 # Register Blueprints
 airplane_blueprint.add_url_rule('/airplanes', view_func=get_airplanes, methods=['GET'])   
 airplane_blueprint.add_url_rule('/create', view_func=create_airplane, methods=['POST'])
 airplane_blueprint.add_url_rule('/update', view_func=update_airplane, methods=['PATCH'])
-airplane_blueprint.add_url_rule('/delete', view_func=delete_airplane, methods=['DELETE'])
+airplane_blueprint.add_url_rule('/delete/<int:airplane_id>', view_func=delete_airplane, methods=['DELETE'])
 airplane_blueprint.add_url_rule('/airplane/<int:airplane_id>/seats', view_func=get_seat_arrangement, methods=['GET'])
 
 if __name__ == '__main__':

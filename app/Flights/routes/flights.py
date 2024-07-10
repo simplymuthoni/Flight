@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.Flights.models import Flight, Airplane
+from app.Flights.models import Flight, Airplane, Airport
 from app import db
 from app.schemas import FlightSchema
 from datetime import datetime
@@ -28,175 +28,123 @@ def get_flights():
     flights_dict_list = [flight.to_dict() for flight in flights]
     return jsonify(flights_dict_list), 200
 
-@flights_blueprint.route('/create', methods=['POST'])
+@flights_blueprint.route('/filter', methods=['GET'])
 @swag_from({
+    'responses': {
+        200: {
+            'description': 'A list of flights',
+            'examples': {
+                'application/json': [
+                    {
+                        'flight_id': 1,
+                        'flight_number': 123,
+                        'departure_airport': 'JFK',
+                        'departure_airport_name': 'John F. Kennedy International Airport',
+                        'departure_city': 'New York',
+                        'departure_country': 'USA',
+                        'arrival_airport': 'LAX',
+                        'arrival_airport_name': 'Los Angeles International Airport',
+                        'arrival_city': 'Los Angeles',
+                        'arrival_country': 'USA',
+                        'departure_date_time': '2024-07-09T12:00:00',
+                        'arrival_date_time': '2024-07-09T15:00:00',
+                        'capacity': 200,
+                        'price': 300.0,
+                        'airplane_id': 5
+                    }
+                ]
+            }
+        },
+        400: {
+            'description': 'Error occurred',
+            'examples': {
+                'application/json': {
+                    'error': 'Error message'
+                }
+            }
+        }},
     'parameters': [
         {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'id': 'Flight',
-                'required': ['flight_number', 'departure_airport', 'arrival_airport', 'departure_date_time', 'arrival_date_time', 'airplane_id', 'capacity', 'price'],
-                'properties': {
-                    'flight_number': {'type': 'string'},
-                    'departure_airport': {'type': 'string'},
-                    'arrival_airport': {'type': 'string'},
-                    'departure_date_time': {'type': 'string', 'format': 'date-time'},
-                    'arrival_date_time': {'type': 'string', 'format': 'date-time'},
-                    'airplane_id': {'type': 'integer'},
-                    'capacity': {'type': 'integer'},
-                    'price': {'type': 'number'},
-                },
-            },
+            'name': 'departure_city',
+            'in': 'query',
+            'type': 'string',
+            'required': False,
+            'description': 'City of departure'
         },
-    ],
-    'responses': {
-        '201': {'description': 'Flight created successfully'},
-        '400': {'description': 'Missing required fields or incorrect format'},
-        '404': {'description': 'Airplane not found'}
-    },
-})
-def create_flight():
-    data = request.get_json()
-
-    flight_number = data.get('flight_number')
-    departure_airport = data.get('departure_airport')
-    arrival_airport = data.get('arrival_airport')
-    departure_date = data.get('departure_date_time')
-    arrival_date = data.get('arrival_date_time')
-    airplane_id = data.get('airplane_id')
-    capacity = data.get('capacity')
-    price = data.get('price')
-    
+        {
+            'name': 'arrival_city',
+            'in': 'query',
+            'type': 'string',
+            'required': False,
+            'description': 'City of arrival'
+        }
+    ]})
+def filter_flights():
     try:
-        departure_date_time = datetime.strptime(departure_date, '%Y-%m-%dT%H:%M:%S')
-        arrival_date_time = datetime.strptime(arrival_date, '%Y-%m-%dT%H:%M:%S')
-    except ValueError:
-        return jsonify({"error": "Incorrect datetime format. Use ISO 8601 format: YYYY-MM-DDTHH:MM:SS"}), 400
+        # Fetch query parameters
+        departure_city = request.args.get('departure_city')
+        arrival_city = request.args.get('arrival_city')
 
-    # Check if all required fields are provided
-    if not all([flight_number, departure_airport, arrival_airport, departure_date_time, arrival_date_time, airplane_id, capacity, price]):
-        return jsonify({"error": "Missing required fields"}), 400
+        # Aliases for the Airport table
+        departure_alias = db.aliased(Airport)
+        arrival_alias = db.aliased(Airport)
 
-    # Check if departure and arrival airports are different
-    if departure_airport == arrival_airport:
-        return jsonify({"error": "Departure and arrival airports must be different"}), 400
+        # Build the query
+        query = db.session.query(
+            Flight.FlightID,
+            Flight.Flight_Number,
+            Flight.Departure_Airport,
+            departure_alias.airport_name.label('departure_airport_name'),
+            departure_alias.city.label('departure_city'),
+            departure_alias.country.label('departure_country'),
+            Flight.Arrival_Airport,
+            arrival_alias.airport_name.label('arrival_airport_name'),
+            arrival_alias.city.label('arrival_city'),
+            arrival_alias.country.label('arrival_country'),
+            Flight.Departure_Date_time,
+            Flight.Arrival_Date_time,
+            Flight.Capacity,
+            Flight.Price,
+            Flight.AirPlaneID
+        ).join(
+            departure_alias, departure_alias.airport_name == Flight.Departure_Airport
+        ).join(
+            arrival_alias, arrival_alias.airport_name == Flight.Arrival_Airport
+        )
 
-    # Check if the airplane exists
-    airplane = Airplane.query.get(airplane_id)
-    if not airplane:
-        return jsonify({"error": "Airplane not found"}), 404
+        # Apply filters if provided
+        if departure_city:
+            query = query.filter(departure_alias.city == departure_city)
+        if arrival_city:
+            query = query.filter(arrival_alias.city == arrival_city)
 
-    # Create the flight object
-    flight = Flight(
-        flight_number=flight_number,
-        departure_airport=departure_airport,
-        arrival_airport=arrival_airport,
-        departure_date_time=departure_date_time,
-        arrival_date_time=arrival_date_time,
-        airplane_id=airplane_id,
-        capacity=capacity,
-        price=price
-    )
+        # Execute the query and get the results
+        flights = query.all()
 
-    try:
-        db.session.add(flight)
-        db.session.commit()
-        return jsonify({"message": "Flight created successfully"}), 201
+        # Prepare the response
+        flights_data = [{
+            'flight_id': flight.FlightID,
+            'flight_number': flight.Flight_Number,
+            'departure_airport': flight.Departure_Airport,
+            'departure_airport_name': flight.departure_airport_name,
+            'departure_city': flight.departure_city,
+            'departure_country': flight.departure_country,
+            'arrival_airport': flight.Arrival_Airport,
+            'arrival_airport_name': flight.arrival_airport_name,
+            'arrival_city': flight.arrival_city,
+            'arrival_country': flight.arrival_country,
+            'departure_date_time': flight.Departure_Date_time.isoformat(),  # Format datetime as ISO string
+            'arrival_date_time': flight.Arrival_Date_time.isoformat(),      # Format datetime as ISO string
+            'capacity': flight.Capacity,
+            'price': float(flight.Price),  # Convert price to float for JSON serialization
+            'airplane_id': flight.AirPlaneID
+        } for flight in flights]
+
+        return jsonify(flights_data), 200
+
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-@flights_blueprint.route('/update/<int:flight_id>', methods=['PATCH'])
-@swag_from({
-    'parameters': [
-        {
-            'name': 'flight_id',
-            'in': 'path',
-            'type': 'integer',
-            'required': True,
-            'description': 'ID of the flight to update'
-        },
-        {
-            'name': 'body',
-            'in': 'body',
-            'required': True,
-            'schema': {
-                'id': 'Flight',
-                'properties': {
-                    'flight_number': {'type': 'string'},
-                    'departure_airport': {'type': 'string'},
-                    'arrival_airport': {'type': 'string'},
-                    'departure_date_time': {'type': 'string', 'format': 'date-time'},
-                    'arrival_date_time': {'type': 'string', 'format': 'date-time'},
-                    'airplane_id': {'type': 'integer'},
-                    'capacity': {'type': 'integer'},
-                    'price': {'type': 'number'},
-                },
-            },
-        },
-    ],
-    'responses': {
-        '200': {'description': 'Flight updated successfully'},
-        '400': {'description': 'Invalid request'},
-        '404': {'description': 'Flight not found'}
-    },
-})
-def update_flight(flight_id):
-    flight = Flight.query.get(flight_id)
-    if not flight:
-        return jsonify({'message': 'Flight not found'}), 404
-
-    data = request.get_json()
-    try:
-        departure_date_time = datetime.strptime(data.get('departure_date_time'), '%Y-%m-%dT%H:%M:%S') if data.get('departure_date_time') else flight.departure_date_time
-        arrival_date_time = datetime.strptime(data.get('arrival_date_time'), '%Y-%m-%dT%H:%M:%S') if data.get('arrival_date_time') else flight.arrival_date_time
-    except ValueError:
-        return jsonify({"error": "Incorrect datetime format. Use ISO 8601 format: YYYY-MM-DDTHH:MM:SS"}), 400
-
-    flight.flight_number = data.get('flight_number', flight.flight_number)
-    flight.departure_airport = data.get('departure_airport', flight.departure_airport)
-    flight.arrival_airport = data.get('arrival_airport', flight.arrival_airport)
-    flight.departure_date_time = departure_date_time
-    flight.arrival_date_time = arrival_date_time
-    flight.airplane_id = data.get('airplane_id', flight.airplane_id)
-    flight.capacity = data.get('capacity', flight.capacity)
-    flight.price = data.get('price', flight.price)
-
-    db.session.commit()
-
-    return jsonify({'message': 'Flight updated successfully', 'flight': flight.to_dict()}), 200
-
-@flights_blueprint.route('/delete/<int:flight_id>', methods=['DELETE'])
-@swag_from({
-    'parameters': [
-        {
-            'name': 'flight_id',
-            'in': 'path',
-            'type': 'integer',
-            'required': True,
-            'description': 'ID of the flight to delete'
-        },
-    ],
-    'responses': {
-        '200': {'description': 'Flight deleted successfully'},
-        '404': {'description': 'Flight not found'}
-    },
-})
-def delete_flight(flight_id):
-    flight = Flight.query.get(flight_id)
-    if not flight:
-        return jsonify({'message': 'Flight not found'}), 404
-
-    db.session.delete(flight)
-    db.session.commit()
-
-    return jsonify({'message': 'Flight deleted successfully'}), 200
-
+        return jsonify({'error': str(e)}), 400
+    
 # Register Blueprints
+flights_blueprint.add_url_rule('/filter', view_func=filter_flights, methods=['GET'])
 flights_blueprint.add_url_rule('/flights', view_func=get_flights, methods=['GET'])
-flights_blueprint.add_url_rule('/create', view_func=create_flight, methods=['POST'])
-flights_blueprint.add_url_rule('/update/<int:flight_id>', view_func=update_flight, methods=['PATCH'])
-flights_blueprint.add_url_rule('/delete/<int:flight_id>', view_func=delete_flight, methods=['DELETE'])
-
