@@ -82,7 +82,7 @@ def get_airplanes():
     airplanes_dict_list = [airplane.to_dict() for airplane in airplanes]
     return jsonify(airplanes_dict_list), 200
 
-@airplane_blueprint.route('/update/<int:id>', methods=['PATCH'])
+@airplane_blueprint.route('/update/<int:airplane_id>', methods=['PATCH'])
 def update_airplane(airplane_id):
     """
     Update airplane
@@ -196,7 +196,7 @@ def delete_airplane(airplane_id):
 # Register Blueprints
 airplane_blueprint.add_url_rule('/airplanes', view_func=get_airplanes, methods=['GET'])   
 airplane_blueprint.add_url_rule('/create', view_func=create_airplane, methods=['POST'])
-airplane_blueprint.add_url_rule('/update', view_func=update_airplane, methods=['PATCH'])
+airplane_blueprint.add_url_rule('/update/<int:airplane_id>', view_func=update_airplane, methods=['PATCH'])
 airplane_blueprint.add_url_rule('/delete/<int:airplane_id>', view_func=delete_airplane, methods=['DELETE'])
 airplane_blueprint.add_url_rule('/airplane/<int:airplane_id>/seats', view_func=get_seat_arrangement, methods=['GET'])
 

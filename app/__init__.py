@@ -39,13 +39,16 @@ def create_app(config_name):
         'development':config.DevelopmentConfig,
         'testing': config.TestingConfig,
         'production' :config.ProductionConfig, 
+        'default': config.DevelopmentConfig
     }
    
     if config_name not in app_config:
         raise KeyError(f"Configuration '{config_name}' is not a valid configuration name.")
     
     app.config.from_object(app_config[config_name])
+
     app.config['SECRET_KEY'] = 'flyhigh'
+    
     if __name__ == "__main__":
         config_name = os.getenv('FLASK_CONFIG', 'development')
     CORS(app)    

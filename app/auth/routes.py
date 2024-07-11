@@ -76,14 +76,14 @@ def add_user():
     if User.query.filter_by(email=email).first() is not None:
         return jsonify({"error": "Email already registered"}), 400
 
-    hashed_password = generate_password_hash(password)
+
     user = User(
         username=username,
         name=name,
         email=email,
         phone_number=phone_number,
         address=address,
-        password=hashed_password
+        password=password
     )
 
     db.session.add(user)
