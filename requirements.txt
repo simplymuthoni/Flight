@@ -3,7 +3,6 @@ APScheduler==3.6.0
 astroid==2.2.5
 bcrypt==3.1.7
 blinker==1.4
-cffi==1.12.3
 Click==7.0
 coverage==4.5.3
 dnspython==1.16.0
@@ -27,7 +26,6 @@ MarkupSafe==1.1.1
 marshmallow==2.19.5
 mccabe==0.6.1
 pep8==1.7.1
-# psycopg2==2.8.3
 pycparser==2.19
 PyJWT==1.7.1
 pylint==2.3.1
