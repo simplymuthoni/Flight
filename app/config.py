@@ -46,12 +46,12 @@ class Config:
     twilio_phone_number = os.environ.get('twilio_phone_number')
 
 class ProductionConfig(Config):
-    DEBUG = False
-
-
-class DevelopmentConfig(Config):
     DEBUG = True
     USE_RELOADER = False
+
+class DevelopmentConfig(Config):
+    DEBUG = False
+    
 
 
 class TestingConfig(Config):
