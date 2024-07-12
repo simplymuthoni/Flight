@@ -50,7 +50,7 @@ def create_app(config_name):
     app.config['SECRET_KEY'] = 'flyhigh'
     
     if __name__ == "__main__":
-        config_name = os.getenv('FLASK_CONFIG', 'development')
+        config_name = 'production'
     CORS(app)    
      
     db.app = app
