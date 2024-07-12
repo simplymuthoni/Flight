@@ -120,8 +120,8 @@ def filter_flights():
 
         # Execute the query and get the results
         flights = query.all()
-
-        # Prepare the response
+        
+         # Prepare the response
         flights_data = [{
             'flight_id': flight.FlightID,
             'flight_number': flight.Flight_Number,
@@ -138,10 +138,9 @@ def filter_flights():
             'capacity': flight.Capacity,
             'price': float(flight.Price),  # Convert price to float for JSON serialization
             'airplane_id': flight.AirPlaneID
-        } for flight in flights]
-
+        }for flight in flights]
         return jsonify(flights_data), 200
-
+  
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     
